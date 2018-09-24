@@ -4,7 +4,9 @@ source: Alerting/Templates.md
 
 > This page is for installs running version 1.42 or later. You can find the older docs [here](Old_Templates.md)
 
-Templates can be assigned to a single or a group of rules and can contain any kind of text. There is also a default template which is used for any rule that isn't associated with a template. This template can be found under `Alert Templates` page and can be edited. It also has an option revert it back to its default content. 
+Templates can be assigned to a single or a group of rules and can contain any kind of text. There is also a default template which is used for any rule that isn't associated with a template. This template can be found under `Alert Templates` page and can be edited. It also has an option revert it back to its default content.
+
+To attach a template to a rule just open the `Alert Templates` settings page, choose the template to assign and click the yellow button in the `Actions` column. In the appearing popupbox select the rule(s) you want the template to be assigned to and click the `Attach` button. You might hold down the CTRL key to select multiple rules at once.
 
 The templating engine in use is Laravel Blade. We will cover some of the basics here, however the official Laravel docs will have more information [here](https://laravel.com/docs/5.4/blade) 
 
@@ -41,7 +43,7 @@ Placeholders are special variables that if used within the template will be repl
 - long uptime of the Device (28 days, 22h 30m 7s): `$alert->uptime_long`
 - description (purpose db field) of the Device: `$alert->description`
 - notes of the Device: `$alert->notes`
-- notes of the alert: `$alert->alert_notes`
+- notes of the alert (ack notes): `$alert->alert_notes`
 - ping timestamp (if icmp enabled): `$alert->ping_timestamp`
 - ping loss (if icmp enabled): `$alert->ping_loss`
 - ping min (if icmp enabled): `$alert->ping_min`
@@ -114,7 +116,7 @@ Unique-ID: {{ $alert->uid }}
 Rule: @if ($alert->name) {{ $alert->name }} @else {{ $alert->rule }} @endif
 @if ($alert->faults) Faults:
 @foreach ($alert->faults as $key => $value)
-  #{{ $key }}: {{ $value['string'] }}
+  {{ $key }}: {{ $value['string'] }}
 @endforeach
 @endif
 Alert sent to:
@@ -131,11 +133,11 @@ Severity: {{ $alert->severity }}
 Timestamp: {{ $alert->timestamp }}
 Rule: @if ($alert->name) {{ $alert->name }} @else {{ $alert->rule }} @endif
 @foreach ($alert->faults as $key => $value)
-Physical Interface: $value['ifDescr']
-Interface Description: $value['ifAlias']
-Interface Speed: @php echo ($value['ifSpeed']/1000000000); @endphp Gbs
-Inbound Utilization: @php echo (($value['ifInOctets_rate']*8)/$value['ifSpeed'])*100; @endphp%
-Outbound Utilization: @php echo (($value['ifOutOctets_rate']*8)/$value['ifSpeed'])*100; @endphp%
+Physical Interface: {{ $value['ifDescr'] }}
+Interface Description: {{ $value['ifAlias'] }}
+Interface Speed: {{ ($value['ifSpeed']/1000000000) }} Gbs
+Inbound Utilization: {{ (($value['ifInOctets_rate']*8)/$value['ifSpeed'])*100 }}
+Outbound Utilization: {{ (($value['ifOutOctets_rate']*8)/$value['ifSpeed'])*100 }}
 @endforeach
 ```
 
@@ -244,7 +246,7 @@ Note: To use HTML emails you must set HTML email to Yes in the WebUI under Globa
 
 Note: To include Graphs you must enable unauthorized graphs in config.php. Allow_unauth_graphs_cidr is optional, but more secure.
 ```
-$config['allow_unauth_graphs_cidr'] = array(127.0.0.1/32');  
+$config['allow_unauth_graphs_cidr'] = array('127.0.0.1/32');  
 $config['allow_unauth_graphs'] = true;
 ```
 
@@ -279,7 +281,7 @@ Alert-ID: {{ $alert->id }} <br>
 Rule: @if ($alert->name) {{ $alert->name }} @else {{ $alert->rule }} @endif <br>
 @if ($alert->faults) Faults:
 @foreach ($alert->faults as $key => $value)
-#{{ $key }}: {{ $value['string'] }}<br>
+{{ $key }}: {{ $value['string'] }}<br>
 @endforeach 
 @if ($alert->faults) <b>Faults:</b><br>
 @foreach ($alert->faults as $key => $value)<img src="https://server/graph.php?device={{ $value['device_id'] }}&type=device_processor&width=459&height=213&lazy_w=552&from=end-72h><br>
